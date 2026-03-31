@@ -10,8 +10,8 @@ from pathlib import Path
 import schedule
 
 # ── MODEL CONFIG ──────────────────────────────────────────────────────────────
-GEMINI_API_KEY = "AIzaSyCb77TSOoitU6HY93s1iigYPhK__Rnra3c"
-GEMINI_MODEL   = "gemini-2.0-flash"
+DEEPSEEK_API_KEY = "sk-5b2b48339b7247699e31513fd8d4f4c2"
+DEEPSEEK_MODEL   = "deepseek-chat"
 MAX_HISTORY      = 40
 
 # ── BOT CONFIG ────────────────────────────────────────────────────────────────
@@ -74,13 +74,17 @@ def build_history(thread, my_user_id: str) -> list:
 def llm(prompt: str) -> str:
     for attempt in range(4):
         try:
-            url = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent?key={GEMINI_API_KEY}"
             resp = requests.post(
-                url,
-                headers={"Content-Type": "application/json"},
+                "https://api.deepseek.com/chat/completions",
+                headers={
+                    "Authorization": f"Bearer {DEEPSEEK_API_KEY}",
+                    "Content-Type": "application/json",
+                },
                 json={
-                    "contents": [{"parts": [{"text": prompt}]}],
-                    "generationConfig": {"maxOutputTokens": 120, "temperature": 0.75},
+                    "model": DEEPSEEK_MODEL,
+                    "messages": [{"role": "user", "content": prompt}],
+                    "max_tokens": 120,
+                    "temperature": 0.75,
                 },
                 timeout=30
             )
@@ -90,7 +94,7 @@ def llm(prompt: str) -> str:
                 time.sleep(wait)
                 continue
             resp.raise_for_status()
-            return resp.json()["candidates"][0]["content"]["parts"][0]["text"].strip()
+            return resp.json()["choices"][0]["message"]["content"].strip()
         except Exception as e:
             print(f"LLM error: {e}")
             return None
