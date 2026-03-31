@@ -72,22 +72,30 @@ def build_history(thread, my_user_id: str) -> list:
 
 # ── LLM CALL ──────────────────────────────────────────────────────────────────
 def llm(prompt: str) -> str:
-    try:
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent?key={GEMINI_API_KEY}"
-        resp = requests.post(
-            url,
-            headers={"Content-Type": "application/json"},
-            json={
-                "contents": [{"parts": [{"text": prompt}]}],
-                "generationConfig": {"maxOutputTokens": 120, "temperature": 0.75},
-            },
-            timeout=30
-        )
-        resp.raise_for_status()
-        return resp.json()["candidates"][0]["content"]["parts"][0]["text"].strip()
-    except Exception as e:
-        print(f"LLM error: {e}")
-        return None
+    for attempt in range(4):
+        try:
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent?key={GEMINI_API_KEY}"
+            resp = requests.post(
+                url,
+                headers={"Content-Type": "application/json"},
+                json={
+                    "contents": [{"parts": [{"text": prompt}]}],
+                    "generationConfig": {"maxOutputTokens": 120, "temperature": 0.75},
+                },
+                timeout=30
+            )
+            if resp.status_code == 429:
+                wait = 30 * (attempt + 1)
+                print(f"Rate limited (attempt {attempt+1}), retrying in {wait}s...")
+                time.sleep(wait)
+                continue
+            resp.raise_for_status()
+            return resp.json()["candidates"][0]["content"]["parts"][0]["text"].strip()
+        except Exception as e:
+            print(f"LLM error: {e}")
+            return None
+    print("LLM failed after 4 attempts (rate limit)")
+    return None
 
 # ── GENERATE REPLY ────────────────────────────────────────────────────────────
 def generate_reply(history: list, sender_name: str) -> str:
@@ -262,9 +270,10 @@ def run():
 
                     print(f"Replied to {name}: {reply}")
                     time.sleep(random.uniform(5, 15))
-
-                seen.add(msg_id)
-                save_seen(seen)
+                    seen.add(msg_id)
+                    save_seen(seen)
+                else:
+                    print(f"LLM failed for {name}, will retry next scan")
 
         except Exception as e:
             print(f"Error: {e}")
