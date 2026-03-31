@@ -10,8 +10,8 @@ from pathlib import Path
 import schedule
 
 # ── MODEL CONFIG ──────────────────────────────────────────────────────────────
-DEEPSEEK_API_KEY = "sk-5b2b48339b7247699e31513fd8d4f4c2"
-DEEPSEEK_MODEL   = "deepseek-chat"
+OPENROUTER_API_KEY = "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"
+OPENROUTER_MODEL   = "deepseek/deepseek-chat"
 MAX_HISTORY      = 40
 
 # ── BOT CONFIG ────────────────────────────────────────────────────────────────
@@ -75,13 +75,13 @@ def llm(prompt: str) -> str:
     for attempt in range(4):
         try:
             resp = requests.post(
-                "https://api.deepseek.com/chat/completions",
+                "https://openrouter.ai/api/v1/chat/completions",
                 headers={
-                    "Authorization": f"Bearer {DEEPSEEK_API_KEY}",
+                    "Authorization": f"Bearer {OPENROUTER_API_KEY}",
                     "Content-Type": "application/json",
                 },
                 json={
-                    "model": DEEPSEEK_MODEL,
+                    "model": OPENROUTER_MODEL,
                     "messages": [{"role": "user", "content": prompt}],
                     "max_tokens": 120,
                     "temperature": 0.75,
