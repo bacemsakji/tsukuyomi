@@ -7,6 +7,8 @@ Run:     python instagram_dm_bot.py
 import time, json, random, threading, requests
 from datetime import datetime
 from pathlib import Path
+from flask import Flask
+import threading
 import schedule
 
 # ── MODEL CONFIG ──────────────────────────────────────────────────────────────
@@ -339,4 +341,5 @@ def run():
 
 
 if __name__ == "__main__":
+    threading.Thread(target=run_web, daemon=True).start()
     run()
