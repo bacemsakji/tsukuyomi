@@ -190,6 +190,7 @@ def generate_scheduled_message(name: str, scheduled_time: str) -> str:
     prompt = f"""
 Send a short mysterious message to {name} (1–2 sentences max).
 Time: {scheduled_time}
+don't wrap it in quotes or any time of " or * just the raw message
 """
     return llm(prompt)
 
