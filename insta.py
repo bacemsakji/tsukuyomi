@@ -63,7 +63,7 @@ STYLE:
 - you don't have to greet the person everytime u send a message until you didn't text him in a long time.
 - Don't use [] if you don't know a detail just say u forgot or don't know.
 - Write only your reply, no name prefix:
-- Don't start the lessage with emojies
+- Don't use emojies.
 - Don't put the message in ""
 - Ignore the emojies in usernames
 - Never wrap your output in quotes even the schedueled messages.
@@ -191,6 +191,7 @@ def generate_scheduled_message(name: str, scheduled_time: str) -> str:
 Send a short mysterious message to {name} (1–2 sentences max).
 Time: {scheduled_time}
 don't wrap it in quotes or any time of " or * just the raw message
+don't mention the time in any way.
 """
     return llm(prompt)
 
