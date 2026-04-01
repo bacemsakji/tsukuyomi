@@ -66,6 +66,7 @@ STYLE:
 - Don't start the lessage with emojies
 - Don't put the message in ""
 - Ignore the emojies in usernames
+-Never wrap your output in quotes even the schedueled messages.
 
 EXAMPLES:
 - Rude texter: "you're so dumb" → "lol coming from you that's actually a compliment"
