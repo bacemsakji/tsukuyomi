@@ -1,19 +1,22 @@
 """
 Instagram DM Bot — Session-Based (NO LOGIN)
-Install: pip install instagrapi schedule flask
+Install: pip install instagrapi schedule flask python-dotenv
 Run:     python instagram_dm_bot.py
 """
 
-import time, json, random, threading, requests
+import time, json, random, threading, requests, os
 from datetime import datetime
 from pathlib import Path
 from flask import Flask
 import schedule
+from dotenv import load_dotenv
 
-# ── MODEL CONFIG ──────────────────────────────────────────────────────────────
-OPENROUTER_API_KEY = (
-    "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"
-)
+load_dotenv()
+
+# ── MODEL CONFIG ───────────────────────────────────────────────────────────[...]
+OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
+if not OPENROUTER_API_KEY:
+    raise ValueError("OPENROUTER_API_KEY not found in environment variables. Please set it in .env file")
 OPENROUTER_MODEL = "deepseek/deepseek-chat"
 MAX_HISTORY = 30
 
@@ -26,7 +29,7 @@ def home():
 def run_web():
     app.run(host="0.0.0.0", port=10000)
 
-# ── BOT CONFIG ────────────────────────────────────────────────────────────────
+# ── BOT CONFIG ──────────────────────────────────────────────────────────[...]
 CHECK_EVERY = 20
 MAX_REPLY_LEN = 150
 SEEN_FILE = "seen_dms.json"
@@ -37,7 +40,7 @@ SCHEDULED_TIMES = ["11:00", "17:00", "21:00"]
 SEND_DELAY_MIN = 10
 SEND_DELAY_MAX = 40
 
-# ── PERSONA ───────────────────────────────────────────────────────────────────
+# ── PERSONA ───────────────────────────────────────────────────────────[...]
 MY_PERSONA = """
 You are Tsukuyoma, a Japanese moon god chatting on Instagram. You have a sharp wit and adapt your energy to whoever you talk to.
 
@@ -95,7 +98,7 @@ SKIP_IF_CONTAINS = [
     "collab dm",
 ]
 
-# ── SHARED STATE ──────────────────────────────────────────────────────────────
+# ── SHARED STATE ───────────────────────────────────────────────────────────[...]
 _cl = None
 _cl_lock = threading.Lock()
 
@@ -104,7 +107,7 @@ def get_client():
     return _cl
 
 
-# ── SEEN DMs ──────────────────────────────────────────────────────────────────
+# ── SEEN DMs ───────────────────────────────────────────────────────────[...]
 def load_seen() -> set:
     if Path(SEEN_FILE).exists():
         return set(json.loads(Path(SEEN_FILE).read_text()))
@@ -115,7 +118,7 @@ def save_seen(seen: set):
     Path(SEEN_FILE).write_text(json.dumps(list(seen)))
 
 
-# ── BUILD HISTORY ─────────────────────────────────────────────────────────────
+# ── BUILD HISTORY ─────────────────────────────────────────────────────────[...]
 def build_history(thread, my_user_id: str) -> list:
     history = []
     messages = sorted(thread.messages, key=lambda m: m.timestamp)
@@ -127,7 +130,7 @@ def build_history(thread, my_user_id: str) -> list:
     return history
 
 
-# ── LLM CALL ──────────────────────────────────────────────────────────────────
+# ── LLM CALL ───────────────────────────────────────────────────────────[...]
 def llm(prompt: str) -> str:
     for attempt in range(4):
         try:
@@ -159,7 +162,7 @@ def llm(prompt: str) -> str:
     return None
 
 
-# ── GENERATE REPLY ────────────────────────────────────────────────────────────
+# ── GENERATE REPLY ─────────────────────────────────────────────────────────[...]
 def generate_reply(history: list, sender_name: str) -> str:
     history_text = ""
     for msg in history:
@@ -185,7 +188,7 @@ Reply:"""
     return reply
 
 
-# ── SCHEDULED MESSAGE ─────────────────────────────────────────────────────────
+# ── SCHEDULED MESSAGE ────────────────────────────────────────────────────────[...]
 def generate_scheduled_message(name: str, scheduled_time: str) -> str:
     prompt = f"""
 Send a short mysterious message to {name} (1–2 sentences max).
@@ -196,7 +199,7 @@ don't mention the time in any way.
     return llm(prompt)
 
 
-# ── HELPERS ───────────────────────────────────────────────────────────────────
+# ── HELPERS ───────────────────────────────────────────────────────────[...]
 def is_spam(text: str) -> bool:
     return any(s in text.lower() for s in SKIP_IF_CONTAINS)
 
@@ -236,7 +239,7 @@ def login():
     return cl
 
 
-# ── BROADCAST ─────────────────────────────────────────────────────────────────
+# ── BROADCAST ──────────────────────────────────────────────────────────[...]
 def run_broadcast(scheduled_time: str):
     cl = get_client()
     if not cl:
@@ -278,7 +281,7 @@ def run_broadcast(scheduled_time: str):
         print(f"Broadcast error: {e}")
 
 
-# ── SCHEDULER ─────────────────────────────────────────────────────────────────
+# ── SCHEDULER ──────────────────────────────────────────────────────────[...]
 def setup_scheduler():
     for t in SCHEDULED_TIMES:
         schedule.every().day.at(t).do(run_broadcast, scheduled_time=t)
@@ -290,7 +293,7 @@ def scheduler_loop():
         time.sleep(30)
 
 
-# ── MAIN LOOP ─────────────────────────────────────────────────────────────────
+# ── MAIN LOOP ──────────────────────────────────────────────────────────[...]
 def run():
     cl = login()
     seen = load_seen()
