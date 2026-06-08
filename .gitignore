@@ -1,5 +1,11 @@
 # Environment variables
 .env
+.env.local
+.env.*.local
+
+# Session and runtime data (auto-generated)
+ig_session.json
+seen_dms.json
 
 # Python
 __pycache__/
@@ -7,9 +13,6 @@ __pycache__/
 *$py.class
 *.so
 .Python
-env/
-venv/
-ENV/
 build/
 develop-eggs/
 dist/
@@ -26,9 +29,10 @@ wheels/
 .installed.cfg
 *.egg
 
-# Session files
-ig_session.json
-seen_dms.json
+# Virtual environments
+venv/
+ENV/
+env/
 
 # IDE
 .vscode/
@@ -37,6 +41,12 @@ seen_dms.json
 *.swo
 *~
 
+# Dependency management
+uv.lock
+
 # OS
 .DS_Store
 Thumbs.db
+
+# Logs
+*.log
